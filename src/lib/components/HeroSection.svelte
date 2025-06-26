@@ -1,5 +1,6 @@
 <script lang="ts">
 	import heroImage from '$assets/hero.png';
+	import { Button } from '$components';
 </script>
 
 <section class="default-margin hero">
@@ -14,7 +15,7 @@
 			Our app offers a beautifully designed, easy-to-user interfvace that makes managing yopur book
 			collection a joy.
 		</h4>
-		<button>Sign up</button>
+		<Button href="/register">Sign up</Button>
 	</div>
 	<img src={heroImage} alt="Hero" class="hero-image" />
 </section>
