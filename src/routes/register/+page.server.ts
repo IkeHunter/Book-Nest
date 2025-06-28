@@ -1,6 +1,7 @@
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
-interface ReturnObject {
+interface ReturnObject extends Record<string, unknown> {
 	success: boolean;
 	errors: string[];
 }
@@ -11,7 +12,7 @@ interface ReturnObject {
  * on the form element.
  */
 export const actions: Actions = {
-	default: async ({ request }) => {
+	default: async ({ request, locals: { supabase } }) => {
 		// Does something with given event
 		const formData = await request.formData();
 
@@ -47,7 +48,15 @@ export const actions: Actions = {
 		}
 
 		// Registration flow
+		const { data, error } = await supabase.auth.signUp({ email, password });
 
-		return returnObject;
+		if (error || !data.user) {
+			console.log('There has been an error');
+			console.log(error);
+			returnObject.success = true;
+			return fail(400, returnObject);
+		}
+
+		redirect(303, '/private/dashboard');
 	}
 };
