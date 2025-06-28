@@ -24,12 +24,17 @@
 				{/each}
 			{/if}
 			{#if isRegistration}
-				<input type="text" name="name" placeholder="Name" />
+				<input type="text" name="name" placeholder="Name" value={form?.name || ''} />
 			{/if}
-			<input type="email" name="email" placeholder="Email" />
-			<input type="password" name="password" placeholder="Password" />
+			<input type="email" name="email" placeholder="Email" value={form?.email || ''} />
+			<input type="password" name="password" placeholder="Password" value={form?.password || ''} />
 			{#if isRegistration}
-				<input type="password" name="passwordConfirmation" placeholder="Confirm Password" />
+				<input
+					type="password"
+					name="passwordConfirmation"
+					placeholder="Confirm Password"
+					value={form?.passwordConfirmation || ''}
+				/>
 			{/if}
 			<Button type="submit">{isRegistration ? 'Register' : 'Login'}</Button>
 			{#if isRegistration}
