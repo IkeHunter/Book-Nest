@@ -1,13 +1,14 @@
+import { PUBLIC_FRONTEND_URL } from '$env/static/public';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 interface ReturnObject extends Record<string, unknown> {
 	success: boolean;
 	errors: string[];
-  email: string,
-  passwordConfirmation?: never
-  name?: never
-  password: string
+	email: string;
+	passwordConfirmation?: never;
+	name?: never;
+	password: string;
 }
 
 /**
@@ -16,7 +17,7 @@ interface ReturnObject extends Record<string, unknown> {
  * on the form element.
  */
 export const actions: Actions = {
-	default: async ({ request, locals: { supabase } }) => {
+	signInWithPassword: async ({ request, locals: { supabase } }) => {
 		// Does something with given event
 		const formData = await request.formData();
 
@@ -54,5 +55,21 @@ export const actions: Actions = {
 		}
 
 		redirect(303, '/private/dashboard');
+	},
+	googleLogin: async ({ locals: { supabase } }) => {
+		const { data, error } = await supabase.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: `${PUBLIC_FRONTEND_URL}/auth/callback`
+			}
+		});
+
+		if (error) {
+			return fail(400, {
+				message: 'Something went wrong with Google login'
+			});
+		}
+
+		throw redirect(303, data.url);
 	}
 };
