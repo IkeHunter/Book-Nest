@@ -8,7 +8,7 @@
 </script>
 
 <header>
-	<a href="/">
+	<a href={user ? '/private/dashboard' : '/'}>
 		<img src={bookNestLogo} alt="Go to home" class="logo" />
 	</a>
 	<nav>
