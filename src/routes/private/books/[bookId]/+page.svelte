@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button, StarRating } from '$components';
-	import type { Book } from '$lib/state/user-state.svelte';
+	import { getUserState, type Book } from '$lib/state/user-state.svelte';
 	import Icon from '@iconify/svelte';
 
 	interface BookPageProps {
@@ -10,11 +10,47 @@
 	}
 
 	let { data }: BookPageProps = $props();
+	let userContext = getUserState();
 
-	let book = $derived(data.book);
+	// let book = $derived(data.book);
+	let book = $derived(userContext.getBookById(data.book.id) || data.book);
+	let isEditMode = $state(false);
+
+	let title = $state(data.book.title);
+	let author = $state(data.book.author);
+	let description = $state(data.book.description || '');
+	let genre = $state(data.book.genre || '');
 
 	function goback() {
 		history.back();
+	}
+
+	async function toggleEditModeAndSave() {
+		if (isEditMode) {
+			await userContext.updateBook(book.id, {
+				title,
+				author,
+				description,
+				genre
+			});
+		}
+		isEditMode = !isEditMode;
+	}
+
+	async function updateReadingStatus() {
+		const hasStartedReading = Boolean(book.started_reading_on);
+		const currentTimestamp = new Date().toISOString();
+
+		if (hasStartedReading) {
+			// set the started_reading_on field
+			await userContext.updateBook(book.id, { finished_reading_on: currentTimestamp });
+		} else {
+			await userContext.updateBook(book.id, { started_reading_on: currentTimestamp });
+		}
+	}
+
+	async function updateDatabaseRating(newRating: number) {
+		await userContext.updateBook(book.id, { rating: newRating });
 	}
 </script>
 
@@ -22,7 +58,7 @@
 	<h2 class="book-title mt-m">{book.title}</h2>
 	<p class="book-author">by {book.author}</p>
 	<h4 class="mt-m mb-xs semi-bold">Your rating</h4>
-	<StarRating value={book.rating || 0} />
+	<StarRating value={book.rating || 0} {updateDatabaseRating} />
 	<p class="small-font">Click to {book.rating ? 'change' : 'give'} rating</p>
 	{#if book.description}
 		<h4 class="mt-m mb-xs semi-bold">Description</h4>
@@ -34,7 +70,7 @@
 		</button>
 	{/if}
 	{#if !book.finished_reading_on}
-		<Button onclick={() => console.log('updating reading status')} isSecondary={true}>
+		<Button onclick={updateReadingStatus} isSecondary={Boolean(book.started_reading_on)}>
 			{book.started_reading_on ? 'I finished reading this book!' : 'I started reading this book'}
 		</Button>
 	{/if}
@@ -44,13 +80,52 @@
 	{/if}
 {/snippet}
 
+{#snippet editFields()}
+	<form>
+		<input type="text" class="input input-title mt-m mb-xs" bind:value={title} name="title" />
+		<div class="input-author">
+			<p>by</p>
+			<input type="text" class="input" bind:value={author} name="author" />
+		</div>
+		<h4 class="mt-m mb-xs semi-bold">Your rating</h4>
+		<StarRating value={book.rating || 0} {updateDatabaseRating} />
+		<p class="small-font">Click to {book.rating ? 'change' : 'give'} rating</p>
+		<h4 class="mt-m mb-xs semi-bold">Description</h4>
+		<textarea
+			class="textarea mb-m"
+			name="description"
+			bind:value={description}
+			placeholder={'Give a description.'}
+		></textarea>
+		{#if !book.finished_reading_on}
+			<Button onclick={updateReadingStatus} isSecondary={Boolean(book.started_reading_on)}>
+				{book.started_reading_on ? 'I finished reading this book!' : 'I started reading this book'}
+			</Button>
+		{/if}
+		<h4 class="mt-m mb-xs semi-bold">Genre</h4>
+		<input type="text" class="input" bind:value={genre} name="genre" />
+	</form>
+{/snippet}
+
 <div class="book-page">
 	<button onclick={goback} aria-label="Go back">
 		<Icon icon="ep:back" width="40" />
 	</button>
 	<div class="book-container">
 		<div class="book-info">
-			{@render bookInfo()}
+			{#if isEditMode}
+				{@render editFields()}
+			{:else}
+				{@render bookInfo()}
+			{/if}
+			<div class="buttons-container mt-m">
+				<Button isSecondary={true} onclick={toggleEditModeAndSave}
+					>{isEditMode ? 'Save changes' : 'Edit'}</Button
+				>
+				<Button isDanger={true} onclick={() => console.log('Delete book')}
+					>Delete book from library</Button
+				>
+			</div>
 		</div>
 		<div class="book-cover">
 			{#if book.cover_image}
@@ -83,7 +158,7 @@
 		border: 1px solid black;
 		border-radius: 15px;
 		min-height: 400px;
-		max-width: 350px;
+		max-width: 450px;
 		margin-left: 80px;
 	}
 
@@ -99,5 +174,29 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+	}
+
+	.input {
+		padding: 8px 4px;
+		width: 100%;
+	}
+
+	.textarea {
+		width: 100%;
+	}
+
+	.input-title {
+		font-size: 60px;
+		font-weight: bold;
+		font-family: 'EB Garamond', serif;
+	}
+
+	.input-author {
+		display: flex;
+		align-items: center;
+	}
+
+	.input-author p {
+		margin-right: 8px;
 	}
 </style>
