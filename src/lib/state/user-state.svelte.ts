@@ -112,9 +112,9 @@ export class UserState {
 
 		return mostCommonGenre || null;
 	}
-	
+
 	getBookById(id: number) {
-		return this.allBooks.find((book) => book.id === id)
+		return this.allBooks.find((book) => book.id === id);
 	}
 
 	async updateBook(bookId: number, updateObject: Partial<UpdatableBookFields>) {
@@ -134,6 +134,27 @@ export class UserState {
 				}
 			});
 		}
+	}
+
+	async uploadBookCover(file: File, bookId: number) {
+		if (!this.user || !this.supabase) {
+			return;
+		}
+
+		const filePath = `${this.user.id}/${new Date().getTime()}_${file.name}`;
+		const { error: uploadError } = await this.supabase.storage
+			.from('book-covers')
+			.upload(filePath, file);
+
+		if (uploadError) {
+			return console.log(uploadError);
+		}
+
+		const {
+			data: { publicUrl }
+		} = this.supabase.storage.from('book-covers').getPublicUrl(filePath);
+
+		await this.updateBook(bookId, { cover_image: publicUrl });
 	}
 
 	async logout() {
