@@ -132,7 +132,7 @@
 				<Button isSecondary={true} onclick={toggleEditModeAndSave}
 					>{isEditMode ? 'Save changes' : 'Edit'}</Button
 				>
-				<Button isDanger={true} onclick={() => console.log('Delete book')}
+				<Button isDanger={true} onclick={() => userContext.deleteBookFromLibrary(book.id)}
 					>Delete book from library</Button
 				>
 			</div>
