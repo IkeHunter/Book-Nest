@@ -90,7 +90,7 @@ export class UserState {
 	}
 
 	getFavoriteGenre() {
-		if (this.allBooks.length === 0) {
+		if (this.allBooks.filter((book) => book.genre).length === 0) {
 			return '';
 		}
 
@@ -115,7 +115,19 @@ export class UserState {
 		);
 		console.log(genreCounts);
 
-		return mostCommonGenre || null;
+		return mostCommonGenre || '';
+	}
+
+	getBooksFromFavoriteGenre() {
+		const mostCommonGenre = this.getFavoriteGenre();
+
+		return this.allBooks
+			.filter((book) => book.genre?.includes(mostCommonGenre))
+			.toSorted((a, z) => {
+				const ratingA = a.rating || 0;
+				const ratingZ = z.rating || 0;
+				return ratingZ - ratingA;
+			});
 	}
 
 	getBookById(id: number) {
