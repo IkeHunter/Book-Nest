@@ -26,10 +26,18 @@
 
 	async function toggleEditModeAndSaveToDatabase() {
 		if (isEditMode) {
-			await userContext.updateAccountData(email, userName)
+			await userContext.updateAccountData(email, userName);
 		}
 		isEditMode = !isEditMode;
-		
+	}
+
+	async function deleteAccount() {
+		const confirmDelete = window.confirm(
+			'Are you sure you want to delete your account? This action cannot be undone and removes all of your data!'
+		);
+		if (!confirmDelete) return;
+
+		await userContext.deleteAccount();
 	}
 </script>
 
@@ -55,7 +63,7 @@
 			<Button isSecondary={true} onclick={toggleEditModeAndSaveToDatabase}>
 				{isEditMode ? 'Save changes' : 'Edit'}
 			</Button>
-			<Button isDanger={true} onclick={() => console.log('Delete account')}>Delete Account</Button>
+			<Button isDanger={true} onclick={deleteAccount}>Delete Account</Button>
 		</div>
 	</div>
 	<div class="stats-container">
