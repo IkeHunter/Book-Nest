@@ -23,6 +23,11 @@ export interface Book {
 	user_id: string;
 }
 
+export interface OpenAiBook {
+	author: string;
+	bookTitle: string;
+}
+
 type UpdatableBookFields = Omit<Book, 'id' | 'created_at' | 'user_id'>;
 
 export class UserState {
@@ -168,6 +173,28 @@ export class UserState {
 		}
 
 		goto('/private/dashboard/');
+	}
+
+	async addBooksToLibrary(booksToAdd: OpenAiBook[]) {
+		if (!this.supabase || !this.user) {
+			return;
+		}
+
+		const userId = this.user.id;
+
+		const processedBooks = booksToAdd.map((book) => ({
+			title: book.bookTitle,
+			author: book.author,
+			user_id: userId
+		}));
+
+		const { error } = await this.supabase.from('books').insert(processedBooks);
+
+		if (error) {
+			throw new Error(error.message);
+		}
+
+		this.fetchUserData();
 	}
 
 	async logout() {

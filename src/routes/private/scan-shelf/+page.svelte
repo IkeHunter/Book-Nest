@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$components/Button.svelte';
+	import { getUserState, type OpenAiBook } from '$lib/state/user-state.svelte';
 	import { convertFileToBase64 } from '$lib/utils/openai-helpers';
 	import Icon from '@iconify/svelte';
 	import Dropzone from 'svelte-file-dropzone';
@@ -8,11 +9,7 @@
 	let errorMessage = $state('');
 	let recognizedBooks = $state<OpenAiBook[]>([]);
 	let booksSuccessfullyAdded = $state(false);
-
-	interface OpenAiBook {
-		author: string;
-		bookTitle: string;
-	}
+	let userContext = getUserState();
 
 	async function handleDrop(e: CustomEvent<any>) {
 		const { acceptedFiles } = e.detail;
@@ -40,6 +37,23 @@
 			errorMessage =
 				"Could not upload given file. Are you sure it's an image with a file size of less than 10MB?";
 		}
+	}
+
+	function removeBook(index: number) {
+		recognizedBooks.splice(index, 1);
+	}
+
+	async function addAllBooks() {
+		isLoading = true;
+
+		try {
+			await userContext.addBooksToLibrary(recognizedBooks);
+			booksSuccessfullyAdded = true;
+		} catch (error: any) {
+			errorMessage = error.message;
+		}
+
+		isLoading = false;
 	}
 </script>
 
@@ -92,7 +106,7 @@
 								type="button"
 								aria-label="Remove book"
 								class="remove-book"
-								onclick={() => console.log(`Delete book with index ${i}`)}
+								onclick={() => removeBook(i)}
 							>
 								<Icon icon="streamline:delete-1-solid" width="24" />
 							</button></td
@@ -101,7 +115,7 @@
 				{/each}
 			</tbody>
 		</table>
-		<Button onclick={() => console.log('add all remaining books')}>Add all books</Button>
+		<Button onclick={() => addAllBooks()}>Add all books</Button>
 	</div>
 {:else}
 	<h4>The selected {recognizedBooks.length} books have been added to your library.</h4>
