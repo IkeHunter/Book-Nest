@@ -197,6 +197,32 @@ export class UserState {
 		this.fetchUserData();
 	}
 
+	async updateAccountData(email: string, userName: string) {
+		if (!this.session || !this.user) {
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/update-account', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${this.session.access_token}`
+				},
+				body: JSON.stringify({ email, userName })
+			});
+
+			if (response.ok) {
+				this.userName = userName;
+				this.user.email = email;
+			} else {
+				console.log('Fetch error:', response);
+			}
+		} catch (error) {
+			console.log('Failed to delete account', error);
+		}
+	}
+
 	async logout() {
 		await this.supabase?.auth.signOut();
 		goto('/login');
